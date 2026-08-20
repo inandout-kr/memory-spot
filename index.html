@@ -52,6 +52,9 @@
     padding:2px 8px;font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none;display:none}
   .scroll{max-height:330px;overflow:auto}
   .groups{display:grid;grid-template-columns:1fr 1fr}
+  /* grid items default to min-width:auto, so a wide nowrap table would push the
+     page sideways instead of scrolling inside its own panel */
+  .grid2>*,.groups>section{min-width:0}
   .groups>section{border-bottom:1px solid var(--grid)}
   .groups>section:nth-child(odd){border-right:1px solid var(--grid)}
   .spark{width:56px;height:14px;vertical-align:middle}
@@ -301,11 +304,17 @@ function render(){
     if(!rows.length)return"";
     const snap=(D.snapshot_groups||[]).includes(g);
     const asOf=rows.reduce((a,[,s])=>s.last_date>a?s.last_date:a,"");
+    // a wide daily high/low band means the survey itself is dispersed - with
+    // DDR4 16Gb averaging 90 inside a 41.5-116 range, the average alone misleads
+    const band=rows.some(([,s])=>s.hi!=null&&s.lo!=null);
     return `<section><div class="ph"><span>${rows[0][1].label}</span>
       <span class="r">${rows[0][1].source} · ${asOf}${snap?" · SNAPSHOT":""}</span></div>
-      <div class="scroll"><table><thead><tr><th>ITEM</th><th>USD</th><th>1W</th><th>1M</th><th>3M</th><th>1Y</th><th>TREND</th></tr></thead><tbody>`
-      +rows.map(([k,s])=>`<tr style="cursor:pointer" data-k="${k}"><td>${s.item}</td><td>${n2(s.last)}</td>
-        <td class="${cl(s.chg_1w)}">${pc(s.chg_1w)}</td><td class="${cl(s.chg_1m)}">${pc(s.chg_1m)}</td>
+      <div class="scroll"><table><thead><tr><th>ITEM</th><th>USD</th>`
+      +(band?`<th>LOW</th><th>HIGH</th>`:``)
+      +`<th>1W</th><th>1M</th><th>3M</th><th>1Y</th><th>TREND</th></tr></thead><tbody>`
+      +rows.map(([k,s])=>`<tr style="cursor:pointer" data-k="${k}"><td>${s.item}</td><td>${n2(s.last)}</td>`
+        +(band?`<td style="color:var(--dim)">${n2(s.lo)}</td><td style="color:var(--dim)">${n2(s.hi)}</td>`:``)
+        +`<td class="${cl(s.chg_1w)}">${pc(s.chg_1w)}</td><td class="${cl(s.chg_1m)}">${pc(s.chg_1m)}</td>
         <td class="${cl(s.chg_3m)}">${pc(s.chg_3m)}</td><td class="${cl(s.chg_1y)}">${pc(s.chg_1y)}</td>
         <td>${spark(s.points)}</td></tr>`).join("")
       +`</tbody></table></div></section>`;}).join("")+`</div>`;
