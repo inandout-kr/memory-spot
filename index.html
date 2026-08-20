@@ -128,9 +128,15 @@
   <div class="ph"><span>DES · SOURCE &amp; METHOD</span></div>
   <div class="note">
     <p><b>출처</b> — DRAMeXchange(TrendForce) 첫 화면과 CFM 闪存市场 첫 화면에 공개된 가격표.
-    API가 없어 페이지에서 직접 읽으며, 두 곳이 겹치는 항목(512Gb TLC 웨이퍼 등)은 서로 다른 서베이라
-    값이 다를 수 있고 그 차이 자체가 정보다. <b>DRAM 칩은 DRAMeXchange가 일간</b>,
-    <b>NAND 웨이퍼는 CFM이 일간</b>으로 가장 빠르다.</p>
+    API가 없어 페이지에서 직접 읽는다. <b>DRAM 칩은 DRAMeXchange가 일간</b>,
+    <b>NAND 웨이퍼는 CFM이 일간</b>으로 갱신이 가장 빠르다.</p>
+    <p><b>두 서베이는 섞지 않는다.</b> 겹치는 항목이라도 값과 갱신 속도가 다르고, 평균 내면 그 차이가
+    사라진다. 지금이 대표적이다 — NAND 웨이퍼 1개월이 DRAMeXchange <span class="up">+30.0%</span>인데
+    CFM은 <span class="dn">−1.0%</span>다. CFM 최근 호가가 0.00%로 고정돼 있는 반면 DRAMeXchange는
+    공격적으로 마킹 중이다. 개별 품목도 마찬가지로 512Gb TLC가 DRAMeXchange $21.12 / CFM $22.50이고,
+    DDR4 16Gb는 DRAMeXchange 평균 $90.10(당일 밴드 $41.50~$116.00) / CFM $50.00이다.
+    <b>어느 쪽이 옳다기보다 현물시장이 그만큼 벌어져 있다는 신호</b>로 읽는 편이 낫다.
+    그래서 지수도 소스별로 따로 낸다.</p>
     <p><b>날짜</b> — 각 가격 블록이 자기 갱신시각을 달고 있어(일간/주간/월간이 섞임) 페이지를 받은 날이 아니라
     <b>블록 자체의 갱신일</b>로 기록한다. 그래서 과거 스냅샷도 정확히 소급된다.</p>
     <p><b>과거 데이터</b> — 두 사이트 모두 이력 API가 없다. Wayback Machine에 남은 캡처를 훑어
@@ -157,7 +163,7 @@
 <script>
 const AMBER="#FFB000", UP="#00FF00", DN="#FF0000", GRID="#232323";
 const RANGES=[["3M",91],["6M",182],["1Y",365],["MAX",0]];
-let D=null, sel="IDX:DRAM", range=365, logScale=true, overlay="", CH=null;
+let D=null, sel="IDX:DRAM:DRAMX", range=365, logScale=true, overlay="", CH=null;
 
 const n2=(v,d=2)=>v==null?"--":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const pc=v=>v==null?"--":(v>0?"+":"")+v.toFixed(2)+"%";
