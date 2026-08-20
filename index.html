@@ -168,9 +168,15 @@ const cut=(pts,days)=>{if(!days||!pts.length)return pts;
 
 /* ── chart ── */
 function draw(){
-  const S=all()[sel]; if(!S){chart.innerHTML="";return;}
   const W=1000,H=360,L=6,R=64,T=14,B=22;
-  const p=cut(S.points,range); if(p.length<2){chart.innerHTML="";return;}
+  const msg=t=>{chart.innerHTML=`<text x="${L+4}" y="${T+10}" fill="${AMBER}" font-size="10">${t}</text>`;};
+  const S=all()[sel]; if(!S){msg("NO SERIES SELECTED");return;}
+  const p=cut(S.points,range);
+  if(p.length<2){
+    const n=S.points.length;
+    msg(`${S.item||sel} · ${n} OBSERVATION${n===1?"":"S"} — INSUFFICIENT HISTORY`
+      +`${n&&range?" IN RANGE; TRY MAX":""}`);
+    CH=null;return;}
   const ov=overlay&&D.equities[overlay]?cut(D.equities[overlay].points,range):[];
   const xs=p.map(q=>+new Date(q[0])), x0=Math.min(...xs), x1=Math.max(...xs);
   const vs=p.map(q=>q[1]);
