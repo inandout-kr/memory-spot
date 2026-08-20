@@ -103,7 +103,7 @@
     </div>
   </div>
   <div class="panel">
-    <div class="ph"><span>MOVERS</span><span class="r" id="movlab">1W %</span></div>
+    <div class="ph"><span>MOVERS</span><span class="r" id="movlab">BY |1W %|</span></div>
     <div class="scroll"><table><thead><tr>
       <th>ITEM</th><th>LAST</th><th>1W</th><th>1M</th></tr></thead>
       <tbody id="movers"></tbody></table></div>
@@ -132,9 +132,12 @@
     <b>블록 자체의 갱신일</b>로 기록한다. 그래서 과거 스냅샷도 정확히 소급된다.</p>
     <p><b>과거 데이터</b> — 두 사이트 모두 이력 API가 없다. Wayback Machine에 남은 캡처를 훑어
     2025년 이후를 복원했다. 초기 구간은 캡처 간격만큼 성기고(대략 주간), 오늘 이후로는 매일 촘촘해진다.</p>
-    <p><b>지수</b> — DXI는 로그인 뒤로 막혀 있어 쓰지 않는다. 대신 <code>연쇄 기하지수</code>를 직접 계산한다.
-    연속한 두 관측일에 <b>모두 존재하는 품목</b>의 가격비만 기하평균해 연결하므로, 품목이 추가·퇴출돼도
-    지수가 튀지 않는다. 시작일 = 100.</p>
+    <p><b>지수</b> — DXI는 로그인 뒤로 막혀 있어(302) 쓰지 않는다. 대신 <code>연쇄 기하지수</code>를 직접 계산한다.
+    바스켓은 <b>전 구간 상시 호가되는 품목</b>으로 고정한다(관측일의 90% 이상 등장). 바스켓이 바뀌면
+    연쇄지수는 표본 밀도에 따라 값이 달라지는데 — 같은 이력이 성긴 캡처에서 2458, 촘촘한 캡처에서 1636이 나왔다 —
+    고정 바스켓은 텔레스코핑이 성립해 그 드리프트가 사라진다. 2·3·4번째 관측일만 남겨 다시 연결해도
+    종점이 <b>0.0000%</b> 차이로 재현된다. 중간에 신설·단종된 품목(eTT, x16 파트)은 지수에서 빼되
+    개별 시계열은 그대로 둔다. 시작일 = 100.</p>
     <p><b>한계</b> — 실시간 아님(하루 1회 갱신) · 고정거래가(contract price)와 LPDDR·eMMC 일부는
     DRAMeXchange 유료 구간이라 없음(CFM 쪽으로 일부 대체) · SSD Street는 브랜드 구성이 매주 바뀌어
     시계열이 아니라 스냅샷으로만 표시 · 사적 모니터링 용도이며 원본 가격의 재배포가 아님.</p>
@@ -273,7 +276,10 @@ function render(){
   ovl.innerHTML='<option value="">OVERLAY: NONE</option>'+Object.entries(D.equities)
     .map(([s,e])=>`<option value="${s}"${s===overlay?" selected":""}>OVERLAY: ${e.ko}</option>`).join("");
 
-  const mov=Object.entries(D.series).filter(([,s])=>s.chg_1w!=null)
+  // only names still being quoted: a product retired months ago is not a mover
+  const newest=Object.values(D.series).reduce((a,s)=>s.last_date>a?s.last_date:a,"");
+  const stale=d=>(new Date(newest)-new Date(d))/864e5>21;
+  const mov=Object.entries(D.series).filter(([,s])=>s.chg_1w!=null&&!stale(s.last_date))
     .sort((a,b)=>Math.abs(b[1].chg_1w)-Math.abs(a[1].chg_1w)).slice(0,14);
   document.getElementById("movers").innerHTML=mov.map(([k,s])=>`
     <tr style="cursor:pointer" data-k="${k}"><td>${s.item}<span style="color:var(--faint);font-size:10px"> ${s.source}</span></td>
@@ -293,9 +299,10 @@ function render(){
     const rows=Object.entries(D.series).filter(([,s])=>s.group===g)
       .sort((a,b)=>b[1].last-a[1].last);
     if(!rows.length)return"";
-    const snap=rows[0][1].points.length<2;
+    const snap=(D.snapshot_groups||[]).includes(g);
+    const asOf=rows.reduce((a,[,s])=>s.last_date>a?s.last_date:a,"");
     return `<section><div class="ph"><span>${rows[0][1].label}</span>
-      <span class="r">${rows[0][1].source} · ${rows[0][1].last_date}${snap?" · SNAPSHOT":""}</span></div>
+      <span class="r">${rows[0][1].source} · ${asOf}${snap?" · SNAPSHOT":""}</span></div>
       <div class="scroll"><table><thead><tr><th>ITEM</th><th>USD</th><th>1W</th><th>1M</th><th>3M</th><th>1Y</th><th>TREND</th></tr></thead><tbody>`
       +rows.map(([k,s])=>`<tr style="cursor:pointer" data-k="${k}"><td>${s.item}</td><td>${n2(s.last)}</td>
         <td class="${cl(s.chg_1w)}">${pc(s.chg_1w)}</td><td class="${cl(s.chg_1m)}">${pc(s.chg_1m)}</td>
