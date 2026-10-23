@@ -49,7 +49,7 @@
   .up{color:var(--up)} .dn{color:var(--dn)} .flat{color:var(--dim)}
   .wrapchart{position:relative}
   .rdo{position:absolute;top:4px;left:4px;background:#000;border:1px solid var(--grid);
-    padding:2px 8px;font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none;display:none}
+    padding:2px 8px;font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none;display:none;white-space:nowrap}
   .scroll{max-height:330px;overflow:auto}
   .groups{display:grid;grid-template-columns:1fr 1fr}
   /* grid items default to min-width:auto, so a wide nowrap table would push the
@@ -244,6 +244,10 @@ chart.addEventListener("mousemove",e=>{
   rdo.style.display="block";
   rdo.innerHTML=`<span style="color:${AMBER}">${q[0]}</span> &nbsp;<b>${n2(q[1])}</b>`
     +` &nbsp;<span class="${cl(ch)}">${pc(ch)}</span>`;
+  // follow the cursor; flip to the other side near the right/bottom edge so it never clips
+  const wr=chart.parentNode.getBoundingClientRect(),mx=e.clientX-wr.left,my=e.clientY-wr.top;
+  rdo.style.left=Math.max(0,mx+14+rdo.offsetWidth>wr.width?mx-14-rdo.offsetWidth:mx+14)+"px";
+  rdo.style.top=Math.max(0,my+14+rdo.offsetHeight>wr.height?my-14-rdo.offsetHeight:my+14)+"px";
 });
 chart.addEventListener("mouseleave",()=>{rdo.style.display="none";
   const ln=document.getElementById("cx");if(ln)ln.setAttribute("visibility","hidden");});
